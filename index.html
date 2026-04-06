@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Old Tashkent Hotel & Spa</title>
+
+  <!-- ✅ Telegram Mini App SDK — MUHIM! -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root {
+      --primary: #8B6914;
+      --primary-light: #C4992A;
+      --bg: #0a0a0a;
+      --card: #141414;
+      --card2: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --text2: #aaa;
+      --accent: #C4992A;
+      --success: #2ecc71;
+      --error: #e74c3c;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,10,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .navbar-logo { font-size: 18px; font-weight: 700; color: var(--accent); }
+    .navbar-controls { display: flex; gap: 8px; }
+    .lang-btn, .cur-btn {
+      background: var(--card2); border: 1px solid var(--border);
+      color: var(--text2); padding: 5px 10px; border-radius: 8px;
+      font-size: 13px; cursor: pointer; transition: all .2s;
+    }
+    .lang-btn.active, .cur-btn.active { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1208 50%, #0a0a0a 100%);
+      padding: 50px 20px 40px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 { font-size: clamp(24px, 5vw, 40px); font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+    .hero p { color: var(--text2); font-size: 15px; margin-bottom: 16px; }
+    .hero-badges { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .badge {
+      background: var(--card2); border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: 20px; font-size: 13px; color: var(--accent);
+    }
+
+    /* ── Section ── */
+    .section { padding: 30px 20px; max-width: 800px; margin: 0 auto; }
+    .section-title {
+      font-size: 20px; font-weight: 700; color: var(--accent);
+      margin-bottom: 20px; padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Rooms Grid ── */
+    .rooms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .room-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; cursor: pointer;
+      transition: all .25s;
+    }
+    .room-card:hover, .room-card.selected {
+      border-color: var(--accent); transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(196,153,42,0.15);
+    }
+    .room-card.selected { background: #1a1508; }
+    .room-emoji { font-size: 28px; margin-bottom: 10px; }
+    .room-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .room-price { color: var(--accent); font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .room-features { list-style: none; }
+    .room-features li { font-size: 12px; color: var(--text2); padding: 2px 0; }
+
+    /* ── Booking Form ── */
+    .booking-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .form-group label { font-size: 13px; color: var(--text2); font-weight: 500; }
+    .form-group input, .form-group select, .form-group textarea {
+      background: var(--card2); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 14px; border-radius: 10px;
+      font-size: 14px; outline: none; transition: border .2s;
+      font-family: inherit;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+    }
+    .form-group select option { background: #1a1a1a; }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+
+    /* Guests counter */
+    .counter-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .counter-label { font-size: 14px; color: var(--text2); }
+    .counter-controls { display: flex; align-items: center; gap: 12px; }
+    .counter-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--card2); border: 1px solid var(--border);
+      color: var(--text); font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .counter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .counter-val { font-size: 16px; font-weight: 600; min-width: 20px; text-align: center; }
+
+    /* Purpose chips */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      background: var(--card2); border: 1px solid var(--border);
+      padding: 7px 14px; border-radius: 20px; font-size: 13px;
+      cursor: pointer; transition: all .2s; color: var(--text2);
+    }
+    .chip.active { border-color: var(--accent); color: var(--accent); background: #1a1508; }
+
+    /* Payment */
+    .payment-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .payment-opt {
+      background: var(--card2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px; cursor: pointer;
+      text-align: center; font-size: 13px; color: var(--text2);
+      transition: all .2s;
+    }
+    .payment-opt.active { border-color: var(--accent); color: var(--accent); background: #1a1508; }
+
+    .card-info {
+      margin-top: 12px; padding: 12px 16px;
+      background: var(--card2); border: 1px solid var(--border);
+      border-radius: 10px; font-size: 13px; color: var(--text2);
+      display: none;
+    }
+    .card-info.show { display: block; }
+    .card-number { font-size: 16px; font-weight: 700; color: var(--accent); letter-spacing: 2px; margin-top: 4px; }
+    .card-copy {
+      display: inline-block; margin-top: 6px;
+      background: var(--accent); color: #000; border: none;
+      padding: 4px 12px; border-radius: 6px; font-size: 12px;
+      cursor: pointer; font-weight: 600;
+    }
+
+    /* Price summary */
+    .price-summary {
+      background: linear-gradient(135deg, #1a1508, #0f0c03);
+      border: 1px solid var(--accent); border-radius: var(--radius);
+      padding: 16px; margin-bottom: 16px;
+    }
+    .price-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; color: var(--text2); }
+    .price-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; color: var(--accent); border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%; padding: 16px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff; font-size: 16px; font-weight: 700;
+      border: none; cursor: pointer; transition: all .25s;
+      letter-spacing: 0.5px;
+    }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(139,105,20,0.4); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: var(--success); color: #fff; padding: 14px 24px;
+      border-radius: 12px; font-size: 14px; font-weight: 600;
+      transition: transform .35s; z-index: 999; white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .toast.error { background: var(--error); }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Success screen */
+    .success-screen {
+      display: none; text-align: center; padding: 60px 20px;
+    }
+    .success-screen.show { display: block; }
+    .success-icon { font-size: 64px; margin-bottom: 16px; }
+    .success-title { font-size: 24px; font-weight: 700; color: var(--success); margin-bottom: 10px; }
+    .success-text { color: var(--text2); line-height: 1.6; }
+
+    @media (max-width: 500px) {
+      .form-row { grid-template-columns: 1fr; }
+      .payment-options { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+  <div class="navbar-logo">🏨 Old Tashkent</div>
+  <div class="navbar-controls">
+    <button class="lang-btn active" onclick="setLang('uz')">🇺🇿 UZ</button>
+    <button class="lang-btn" onclick="setLang('ru')">🇷🇺 RU</button>
+    <button class="lang-btn" onclick="setLang('en')">🇬🇧 EN</button>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <h1>Old Tashkent Hotel & Spa</h1>
+  <p id="hero-sub">Mehmondo'stlik va qulaylik uyg'unligi</p>
+  <div class="hero-badges">
+    <span class="badge">⭐⭐⭐ 3 yulduz</span>
+    <span class="badge">9.2/10 Booking.com</span>
+    <span class="badge">35 xona</span>
+    <span class="badge">✈️ Aeroport 12 daq</span>
+  </div>
+</div>
+
+<!-- ── Xona turlari ── -->
+<div class="section">
+  <div class="section-title" id="t-rooms">🛏 Xona turini tanlang</div>
+  <div class="rooms-grid" id="rooms-grid"></div>
+</div>
+
+<!-- ── Bron Forma ── -->
+<div class="section">
+  <div class="section-title" id="t-booking">📅 Bron ma'lumotlari</div>
+  <div class="booking-card">
+
+    <!-- Sana -->
+    <div class="form-row">
+      <div class="form-group">
+        <label id="l-checkin">📅 Kelish sanasi (14:00 dan)</label>
+        <input type="date" id="checkin" />
+      </div>
+      <div class="form-group">
+        <label id="l-checkout">📅 Ketish sanasi (12:00 gacha)</label>
+        <input type="date" id="checkout" />
+      </div>
+    </div>
+
+    <!-- Mehmonlar -->
+    <div class="form-group">
+      <label id="l-guests">👥 Mehmonlar soni</label>
+      <div class="counter-row">
+        <span class="counter-label" id="l-adults">Kattalar (12+)</span>
+        <div class="counter-controls">
+          <button class="counter-btn" onclick="change('adults',-1)">−</button>
+          <span class="counter-val" id="adults-val">1</span>
+          <button class="counter-btn" onclick="change('adults',1)">+</button>
+        </div>
+      </div>
+      <div class="counter-row">
+        <span class="counter-label" id="l-children">Bolalar (12 yoshgacha)</span>
+        <div class="counter-controls">
+          <button class="counter-btn" onclick="change('children',-1)">−</button>
+          <span class="counter-val" id="children-val">0</span>
+          <button class="counter-btn" onclick="change('children',1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Maqsad -->
+    <div class="form-group">
+      <label id="l-purpose">🎯 Safar maqsadi</label>
+      <div class="chips">
+        <div class="chip active" onclick="setPurpose(this,'couple')" id="p-couple">💑 Juftlik</div>
+        <div class="chip" onclick="setPurpose(this,'family')" id="p-family">👨‍👩‍👧‍👦 Oilaviy</div>
+        <div class="chip" onclick="setPurpose(this,'friends')" id="p-friends">🎉 Do'stlar</div>
+        <div class="chip" onclick="setPurpose(this,'business')" id="p-business">💼 Biznes</div>
+        <div class="chip" onclick="setPurpose(this,'solo')" id="p-solo">👤 Yolg'iz</div>
+      </div>
+    </div>
+
+    <!-- To'lov -->
+    <div class="form-group">
+      <label id="l-payment">💳 To'lov usuli</label>
+      <div class="payment-options">
+        <div class="payment-opt active" onclick="setPayment(this,'onsite')">🏨 Joyida to'lash</div>
+        <div class="payment-opt" onclick="setPayment(this,'advance')">💳 10% Avans</div>
+      </div>
+      <div class="card-info" id="card-info">
+        <div id="l-card-hint">Avans to'lovi uchun karta:</div>
+        <div class="card-number">9860 3401 0170 8832</div>
+        <button class="card-copy" onclick="copyCard()">📋 Nusxa olish</button>
+        <div id="advance-note" style="margin-top:8px;font-size:12px;color:#aaa">
+          Avans summasi: <span id="advance-amount" style="color:var(--accent);font-weight:700">$0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shaxsiy ma'lumot -->
+    <div class="form-row">
+      <div class="form-group">
+        <label id="l-name">👤 To'liq ismingiz</label>
+        <input type="text" id="guest-name" placeholder="Ism Familiya" />
+      </div>
+      <div class="form-group">
+        <label id="l-phone">📞 Telefon raqam</label>
+        <input type="tel" id="guest-phone" placeholder="+998901234567" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label id="l-wishes">💬 Maxsus xohishlar (ixtiyoriy)</label>
+      <textarea id="wishes" placeholder="Baland qavat, tinch xona, erta kirish..."></textarea>
+    </div>
+
+    <!-- Narx xulosasi -->
+    <div class="price-summary" id="price-summary" style="display:none">
+      <div class="price-row"><span id="l-room-label">Xona:</span><span id="sum-room">—</span></div>
+      <div class="price-row"><span id="l-nights-label">Kunlar:</span><span id="sum-nights">—</span></div>
+      <div class="price-total"><span id="l-total">Jami:</span><span id="sum-total">—</span></div>
+    </div>
+
+    <button class="btn-submit" id="submit-btn" onclick="submitBooking()">
+      <span id="btn-text">✅ Bron so'rovini yuborish</span>
+    </button>
+  </div>
+</div>
+
+<!-- Success -->
+<div class="success-screen" id="success-screen">
+  <div class="success-icon">✅</div>
+  <div class="success-title" id="s-title">Bron qabul qilindi!</div>
+  <p class="success-text" id="s-text">
+    Xodimlarimiz tez orada telefon raqamingizga qo'ng'iroq qiladi va bronni tasdiqlaydi.<br><br>
+    ⏰ Ish vaqti: 09:00 – 22:00<br>
+    📞 +998 (90) 971-62-08
+  </p>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  TELEGRAM MINI APP INIT
+// ════════════════════════════════════════════════════════
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+  // Telegram theme ranglarini qo'llash
+  if (tg.colorScheme === 'light') {
+    document.documentElement.style.setProperty('--bg', '#f5f5f5');
+    document.documentElement.style.setProperty('--card', '#ffffff');
+    document.documentElement.style.setProperty('--card2', '#f0f0f0');
+    document.documentElement.style.setProperty('--text', '#1a1a1a');
+    document.documentElement.style.setProperty('--text2', '#666');
+    document.documentElement.style.setProperty('--border', '#e0e0e0');
+  }
+}
+
+const isMiniApp = !!tg?.initData;
+
+// ════════════════════════════════════════════════════════
+//  TILLAR
+// ════════════════════════════════════════════════════════
+const LANGS = {
+  uz: {
+    'hero-sub': "Mehmondo'stlik va qulaylik uyg'unligi",
+    't-rooms': "🛏 Xona turini tanlang",
+    't-booking': "📅 Bron ma'lumotlari",
+    'l-checkin': "📅 Kelish sanasi (14:00 dan)",
+    'l-checkout': "📅 Ketish sanasi (12:00 gacha)",
+    'l-guests': "👥 Mehmonlar soni",
+    'l-adults': "Kattalar (12+)",
+    'l-children': "Bolalar (12 yoshgacha)",
+    'l-purpose': "🎯 Safar maqsadi",
+    'l-payment': "💳 To'lov usuli",
+    'l-card-hint': "Avans to'lovi uchun karta:",
+    'l-name': "👤 To'liq ismingiz",
+    'l-phone': "📞 Telefon raqam",
+    'l-wishes': "💬 Maxsus xohishlar (ixtiyoriy)",
+    'l-room-label': "Xona:",
+    'l-nights-label': "Kunlar:",
+    'l-total': "Jami:",
+    'btn-text': "✅ Bron so'rovini yuborish",
+    'p-couple': "💑 Juftlik", 'p-family': "👨‍👩‍👧‍👦 Oilaviy",
+    'p-friends': "🎉 Do'stlar", 'p-business': "💼 Biznes", 'p-solo': "👤 Yolg'iz",
+    's-title': "Bron qabul qilindi!", 's-text': "Xodimlarimiz tez orada telefon raqamingizga qo'ng'iroq qiladi va bronni tasdiqlaydi.<br><br>⏰ Ish vaqti: 09:00 – 22:00<br>📞 +998 (90) 971-62-08",
+  },
+  ru: {
+    'hero-sub': "Гостеприимство и комфорт в гармонии",
+    't-rooms': "🛏 Выберите тип номера",
+    't-booking': "📅 Данные бронирования",
+    'l-checkin': "📅 Дата заезда (с 14:00)",
+    'l-checkout': "📅 Дата выезда (до 12:00)",
+    'l-guests': "👥 Количество гостей",
+    'l-adults': "Взрослые (12+)",
+    'l-children': "Дети (до 12 лет)",
+    'l-purpose': "🎯 Цель поездки",
+    'l-payment': "💳 Способ оплаты",
+    'l-card-hint': "Карта для предоплаты:",
+    'l-name': "👤 Полное имя",
+    'l-phone': "📞 Номер телефона",
+    'l-wishes': "💬 Особые пожелания (необязательно)",
+    'l-room-label': "Номер:", 'l-nights-label': "Ночей:", 'l-total': "Итого:",
+    'btn-text': "✅ Отправить запрос на бронь",
+    'p-couple': "💑 Пара", 'p-family': "👨‍👩‍👧‍👦 Семья",
+    'p-friends': "🎉 Друзья", 'p-business': "💼 Бизнес", 'p-solo': "👤 Один",
+    's-title': "Бронь принята!", 's-text': "Наши сотрудники скоро позвонят вам для подтверждения.<br><br>⏰ Рабочее время: 09:00 – 22:00<br>📞 +998 (90) 971-62-08",
+  },
+  en: {
+    'hero-sub': "Where hospitality meets comfort",
+    't-rooms': "🛏 Select Room Type",
+    't-booking': "📅 Booking Details",
+    'l-checkin': "📅 Check-in date (from 14:00)",
+    'l-checkout': "📅 Check-out date (until 12:00)",
+    'l-guests': "👥 Number of guests",
+    'l-adults': "Adults (12+)",
+    'l-children': "Children (under 12)",
+    'l-purpose': "🎯 Travel purpose",
+    'l-payment': "💳 Payment method",
+    'l-card-hint': "Card for advance payment:",
+    'l-name': "👤 Full Name",
+    'l-phone': "📞 Phone number",
+    'l-wishes': "💬 Special requests (optional)",
+    'l-room-label': "Room:", 'l-nights-label': "Nights:", 'l-total': "Total:",
+    'btn-text': "✅ Submit Booking Request",
+    'p-couple': "💑 Couple", 'p-family': "👨‍👩‍👧‍👦 Family",
+    'p-friends': "🎉 Friends", 'p-business': "💼 Business", 'p-solo': "👤 Solo",
+    's-title': "Booking received!", 's-text': "Our staff will call you shortly to confirm your booking.<br><br>⏰ Working hours: 09:00 – 22:00<br>📞 +998 (90) 971-62-08",
+  }
+};
+
+let currentLang = 'uz';
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['uz','ru','en'][i] === lang);
+  });
+  const t = LANGS[lang];
+  Object.keys(t).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = t[id];
+  });
+  renderRooms();
+}
+
+// ════════════════════════════════════════════════════════
+//  XONALAR
+// ════════════════════════════════════════════════════════
+const ROOMS = [
+  { id:'standard', emoji:'🛏', price: 68,
+    name: { uz:'Standard Xona', ru:'Стандартный Номер', en:'Standard Room' },
+    cap: { uz:'1-2 kishi', ru:'1-2 человека', en:'1-2 guests' },
+    features: { uz:['✅ Konditsioner','✅ Yasli TV','✅ Muzlatgich','✅ Wi-Fi','✅ Xavfsizlik seifi','✅ Dush + fen'],
+                ru:['✅ Кондиционер','✅ Телевизор','✅ Холодильник','✅ Wi-Fi','✅ Сейф','✅ Душ + фен'],
+                en:['✅ Air conditioning','✅ Flat TV','✅ Fridge','✅ Wi-Fi','✅ Safe','✅ Shower + hairdryer'] }},
+  { id:'deluxe', emoji:'🛎', price: 90,
+    name: { uz:'Deluxe Xona', ru:'Делюкс Номер', en:'Deluxe Room' },
+    cap: { uz:'1-3 kishi', ru:'1-3 человека', en:'1-3 guests' },
+    features: { uz:['✅ King/Twin karavot','✅ Vanna + dush','✅ Ovoz izolyatsiya','✅ Wi-Fi','✅ Kabel TV','✅ Seif'],
+                ru:['✅ Кровать King/Twin','✅ Ванна + душ','✅ Шумоизоляция','✅ Wi-Fi','✅ ТВ кабель','✅ Сейф'],
+                en:['✅ King/Twin bed','✅ Bath + shower','✅ Soundproofing','✅ Wi-Fi','✅ Cable TV','✅ Safe'] }},
+  { id:'triple', emoji:'👨‍👩‍👧', price: 110,
+    name: { uz:'Triple Xona', ru:'Тройной Номер', en:'Triple Room' },
+    cap: { uz:'3 kishi', ru:'3 человека', en:'3 guests' },
+    features: { uz:['✅ 3 ta karavot','✅ Konditsioner','✅ TV','✅ Muzlatgich','✅ Wi-Fi','✅ Hammom']
